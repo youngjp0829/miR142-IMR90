@@ -1,0 +1,29 @@
+wget -O 251008_YOUSIN_XIFAN_6_HUMAN_RNA_RIBOZERO_40M_PE75_AVITI.tar "https://cumc-scac-u1-public.s3.us-east-2.amazonaws.com/251008_YOUSIN_XIFAN_6_HUMAN_RNA_RIBOZERO_40M_PE75_AVITI/251008_YOUSIN_XIFAN_6_HUMAN_RNA_RIBOZERO_40M_PE75_AVITI.tar?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2QDAH54MIDJEVFPD%2F20251103%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20251103T210440Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=f95160fe4691289917dc5bcae4a5190a9b5a74e89c8dbadd67b8edc76c8f800b"
+
+# Trim Adaptor and remove low-quality reads
+input_dir="/home/jy3062/Xifan-RNA/fastq"
+
+# Output directory for trimmed files and FastQC reports
+output_dir="/home/jy3062/Xifan-RNA/trimmed"
+mkdir -p "$output_dir"
+
+# Loop through all R1 (forward) files in the input directory
+for r1_file in "$input_dir"/*_R1.fastq.gz; do
+    sample_name="${r1_file%_R1.fastq.gz}"
+    r2_file="${sample_name}_R2.fastq.gz"
+    
+    if [[ -f "$r2_file" ]]; then
+        echo "Processing sample $sample_name..."
+        
+        # Run Trim Galore on the paired-end files
+        ./trim_galore --paired "$r1_file" "$r2_file" --fastqc -j 4 --output_dir "$output_dir"
+        
+        echo "Finished processing $sample_name"
+    else
+        echo "Warning: Matching R2 file not found for $r1_file"
+    fi
+done
+
+echo "All samples processed!"
+
+####
