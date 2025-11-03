@@ -26,33 +26,19 @@ done
 
 echo "All samples processed!"
 
-####
-#!/bin/bash
+####Alignment
 STAR=/home/jy3062/STAR-2.7.11b/bin/Linux_x86_64_static/STAR
-mkdir STARindex_mm_PE100
-${STAR} --runMode genomeGenerate --genomeDir /home/jy3062/Lee/STARindex_mm_PE100 --genomeFastaFiles /home/jy3062/Lee/ref/GRCm39.primary_assembly.genome.fa --sjdbGTFfile /home/jy3062/Lee/ref/gencode.vM36.basic.annotation.gtf --sjdbOverhang 99 --runThreadN 40
-
-gencode.vM36.basic.annotation.gtf
-
-# Directories
 input_dir="/home/jy3062/Xifan-RNA/trimmed"
 output_dir="/home/jy3062/Xifan-RNA/alignment"
 genome_dir="/home/jy3062/STARindex_PE100"
 mkdir -p "$output_dir"
-for r1_file in "$input_dir"/*_1_val_1.fq.gz; do
-    # Derive the sample name by removing "_val_1.fq.gz"
-    sample_name="${r1_file%_1_val_1.fq.gz}"
-    
-    # Define the corresponding R2 file
-    r2_file="${sample_name}_2_val_2.fq.gz"
-    
-    # Check if the corresponding R2 file exists
+for r1_file in "$input_dir"/*_R1_val_1.fq.gz; do
+    sample_name="${r1_file%_R1_val_1.fq.gz}"
+    r2_file="${sample_name}_R2_val_2.fq.gz"
     if [[ -f "$r2_file" ]]; then
         # Define output prefix
         output_prefix="$output_dir/$(basename "$sample_name")-"
-        
-        echo "Aligning sample $(basename "$sample_name")..."
-        
+        echo "Aligning sample $(basename "$sample_name")..." 
         # Run STAR
         ${STAR} --genomeDir "$genome_dir" \
              --readFilesCommand zcat \
@@ -60,18 +46,13 @@ for r1_file in "$input_dir"/*_1_val_1.fq.gz; do
              --outFileNamePrefix "$output_prefix" \
              --outFilterMismatchNoverLmax 0.05 \
              --outSAMtype BAM SortedByCoordinate \
-             --runThreadN 30
-             
+             --runThreadN 30    
         echo "Finished aligning sample $(basename "$sample_name")"
     else
         echo "Warning: Matching R2 file not found for $r1_file"
     fi
 done
-
 echo "All samples aligned!"
-
-
-######
+######featurecounts
 featureCounts=/home/jy3062/Maggie/subread-2.0.6-Linux-x86_64/bin/featureCounts
-
-${featureCounts} -p --countReadPairs -g gene_name -T 40 -a /home/jy3062/Lee/ref/gencode.vM36.basic.annotation.gtf -o Lee-featuresCounts_genename_countPairedread.txt /home/jy3062/Lee/alignment/*.sortedByCoord.out.bam
+${featureCounts} -p --countReadPairs -g gene_name -T 40 -a /home/jy3062/gencode.v49.annotation.gtf -o Mir142-IMR90-featuresCounts_genename_countPairedread.txt /home/jy3062/Xifan-RNA/alignment/*.sortedByCoord.out.bam
